@@ -31,6 +31,8 @@
 @property (strong, nonatomic) F3HNumberTileGameViewController *ctrl2048;
 @property (strong, nonatomic) NSDictionary *lastDic;
 
+@property (strong, nonatomic) NSMutableDictionary *games;
+
 @end
 
 
@@ -53,6 +55,13 @@
         [self requestSourceData:YES];
     });
     
+}
+
+- (NSMutableDictionary *)games {
+    if (!_games) {
+        _games = [NSMutableDictionary dictionary];
+    }
+    return _games;
 }
 
 
@@ -376,35 +385,28 @@
         return;
     }
     
-    if (!_ctrl2048 || !_lastDic) {
-        _ctrl2048 = [F3HNumberTileGameViewController numberTileGameWithDimension:number.integerValue
-                                                                    winThreshold:10000000
-                                                                 backgroundColor:[UIColor whiteColor]
-                                                                     scoreModule:YES
-                                                                  buttonControls:NO
-                                                                   swipeControls:YES];
+    // 寻找同一规格的游戏
+    if ([[self.games allKeys] containsObject:number]) {
         
+        // 存在，直接打开
+        F3HNumberTileGameViewController *ctrl = [self.games valueForKey:number];
+        [self presentViewController:ctrl animated:YES completion:nil];
         
     } else {
+        // 不存在，创建
+        F3HNumberTileGameViewController *ctrl = [F3HNumberTileGameViewController numberTileGameWithDimension:number.integerValue
+                                                                                                winThreshold:10000000
+                                                                                             backgroundColor:[UIColor whiteColor]
+                                                                                                 scoreModule:YES
+                                                                                              buttonControls:NO
+                                                                                               swipeControls:YES];
+        [self presentViewController:ctrl animated:YES completion:nil];
         
-        NSString *lastNumber = _lastDic[@"number"];
-        
-        if (![lastNumber isEqualToString:number]) {
-            
-            // 如果不是同一个规格，重开
-            _ctrl2048 = [F3HNumberTileGameViewController numberTileGameWithDimension:number.integerValue
-                                                                        winThreshold:10000000
-                                                                     backgroundColor:[UIColor whiteColor]
-                                                                         scoreModule:YES
-                                                                      buttonControls:NO
-                                                                       swipeControls:YES];
-        }
-        
+        // 储存
+        [self.games setValue:ctrl forKey:number];
         
     }
     
-    _lastDic = infoDic;
-    [self presentViewController:_ctrl2048 animated:YES completion:nil];
     
     
 }
